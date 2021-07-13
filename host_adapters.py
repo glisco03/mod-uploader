@@ -1,20 +1,24 @@
 import json
+
 import amtSemVer
 import requests
 
 import utils
 
 
-def upload(url, payload_field, payload, file, token_header, token):
+def upload(host_friendly_name, url, payload_field, payload, file, token_header, token):
     payload = {payload_field: json.dumps(payload)}
     files = {"file": file}
 
-    print("Sending request...")
+    utils.log_action("Sending request to " + host_friendly_name)
     r = requests.post(
         url,
         data=payload, files=files, headers={token_header: token})
 
-    print("Got Response: [" + str(r.status_code) + "] " + r.text)
+    if r.status_code == 200:
+        utils.finish_log_action()
+    else:
+        utils.fail(r.text, -1)
 
 
 def upload_modrinth(filename, token, mod_config, metadata_container, debug):
@@ -35,12 +39,12 @@ def upload_modrinth(filename, token, mod_config, metadata_container, debug):
         print("The following request will be sent to Modrinth: ")
         print(json.dumps(modrinth_data, indent=4))
 
-        abort = input("Proceed? y/n \n")
-        if not abort == "y":
+        if not utils.confirm("Proceed?"):
             print("Aborting...")
             return
 
-    upload("https://api.modrinth.com/api/v1/version", "data", modrinth_data, open(filename, "rb"), "Authorization", token)
+    upload("Modrinth", "https://api.modrinth.com/api/v1/version", "data", modrinth_data, open(filename, "rb"),
+           "Authorization", token)
 
 
 def upload_curseforge(filename, token, mod_config, metadata_container, debug):
@@ -65,16 +69,17 @@ def upload_curseforge(filename, token, mod_config, metadata_container, debug):
 
     cf_metadata["game_versions"] = cf_version_ids
 
-    if debug:
-        cf_metadata["displayName"] = utils.format_version_string(mod_config, metadata_container["version"])
-        cf_metadata["relations"] = {"projects": mod_config["related_projects"]} if "related_projects" in mod_config else {}
+    cf_metadata["displayName"] = utils.format_version_string(mod_config, metadata_container["version"])
+    cf_metadata["relations"] = {"projects": mod_config["related_projects"]} if "related_projects" in mod_config else {}
 
+    if debug:
         print("The following request will be sent to CurseForge: ")
         print(json.dumps(cf_metadata, indent=4))
 
-        abort = input("Proceed? y/n \n")
-        if not abort == "y":
+        if not utils.confirm("Proceed?"):
             print("Aborting...")
             return
 
-    upload("https://minecraft.curseforge.com/api/projects/" + mod_config["curseforge_id"] + "/upload-file", "metadata", cf_metadata, open(filename, "rb"), "X-Api-Token", token)
+    upload("CurseForge",
+           "https://minecraft.curseforge.com/api/projects/" + mod_config["curseforge_id"] + "/upload-file", "metadata",
+           cf_metadata, open(filename, "rb"), "X-Api-Token", token)
