@@ -70,7 +70,9 @@ def upload_curseforge(filename, token, mod_config, metadata_container, debug):
     cf_metadata["game_versions"] = cf_version_ids
 
     cf_metadata["displayName"] = utils.format_version_string(mod_config, metadata_container["version"])
-    cf_metadata["relations"] = {"projects": mod_config["related_projects"]} if "related_projects" in mod_config else {}
+    if "related_projects" in mod_config:
+        cf_metadata["relations"] = {"projects": mod_config["related_projects"]}
+    cf_metadata["releaseType"] = metadata_container["releaseType"]
 
     if debug:
         print("The following request will be sent to CurseForge: ")
