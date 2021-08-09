@@ -67,7 +67,7 @@ def upload_curseforge(filename, token, mod_config, metadata_container, debug):
     for element in cf_matching_versions:
         cf_version_ids.append(element["id"])
 
-    cf_metadata["game_versions"] = cf_version_ids
+    cf_metadata["gameVersions"] = cf_version_ids
 
     cf_metadata["displayName"] = utils.format_version_string(mod_config, metadata_container["version"])
     if "related_projects" in mod_config:

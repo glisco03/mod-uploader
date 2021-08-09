@@ -1,0 +1,23 @@
+{
+  "display_name": "Things",
+  "curseforge_id": "456151",
+  "modrinth_id": "VzAGdu9D",
+  "modloader": "fabric",
+  "minecraft_versions": [
+    "1.16.2",
+    "1.16.3",
+    "1.16.4",
+    "1.16.5"
+  ],
+  "artifact_directory": "C:/Users/zombi/eclipse-workspace/HardeningCrystal/build/libs/",
+  "related_projects": [
+    {
+      "slug": "cloth-config",
+      "type": "requiredDependency"
+    },
+    {
+      "slug": "curios-fabric",
+      "type": "requiredDependency"
+    }
+  ]
+}

@@ -4,7 +4,10 @@ import os.path
 from termcolor import colored
 
 VALID_RELEASE_TYPES = ["alpha", "beta", "release"]
+
 CONFIG_SCHEMA = ["display_name", "curseforge_id", "minecraft_versions"]
+ARTIFACT_SEARCH_SCHEMA = ["artifact_directory", "artifact_filename_pattern"]
+
 TOKEN_SCHEMA = ["curseforge"]
 
 log_action_active = False
@@ -32,7 +35,7 @@ def format_version_string(mod_config, version):
 
 def verify_is_file(file, error_message):
     if not os.path.isfile(file):
-        print(error_message)
+        fail(error_message)
         exit(1)
 
 
@@ -45,7 +48,7 @@ def verify_schema_and_open(filename, required_keys):
 def verify_json_schema(json_name, json, required_keys):
     for key in required_keys:
         if key not in json:
-            print(json_name + " is missing required key " + key)
+            fail(json_name + " is missing required key " + key)
             exit(1)
 
 
@@ -57,7 +60,7 @@ def fail(message, error_code=1):
     if log_action_active:
         print(colored("Failed", "red"))
 
-    print(colored("\nThe following error has been encountered:", "red"), end=" ")
+    print(colored("\nThe following error has occurred:", "red"), end=" ")
     print(colored(message + "\n", "yellow"))
     if not error_code == -1:
         exit(error_code)

@@ -26,31 +26,20 @@ parser.add_argument("-m", "--modrinth", help="Don't ask, always upload to Modrin
 parser.add_argument("-c", "--curseforge", help="Don't ask, always upload to CurseForge", action="store_true")
 parser.add_argument("-l", "--loader", help="Overrides the modloader defined in config, required if none is defined",
                     type=str, choices=["forge", "fabric"])
+parser.add_argument("-f", "--find-artifact", help="Interpret artifact filename as version ID and search using the given pattern in the given directory",
+                    action="store_true")
 parser.add_argument("--debug", help="Prints the requests being sent to the host sites", action="store_true")
 
 args = parser.parse_args()
-print("\n\u001b[38;5;100mScatter™ Mod Publishing Utility - v0.1-beta\u001b[0m\n")
+print("\n\u001b[38;5;100mScatter™ Mod Publishing Utility - v0.2-beta\u001b[0m\n")
 
 # Verify input
 utils.verify_is_file("tokens.json", "No token config provided")
-
 utils.verify_is_file(args.config_file, "Invalid config filename")
-utils.verify_is_file(args.artifact, "Invalid artifact filename")
 
-# Save filename
-config_filename = args.config_file
-artifact_filename = args.artifact
-
-# Read API tokens
-log_action("Reading API tokens")
-
-tokens = utils.verify_schema_and_open("tokens.json", utils.TOKEN_SCHEMA)
-cf_token = tokens["curseforge"]
-modrinth_token = tokens["modrinth"] if "modrinth" in tokens else None
-
-finish_log_action()
 
 # Read upload config
+config_filename = args.config_file
 log_action("Reading and verifying upload config")
 
 config = utils.verify_schema_and_open(config_filename, utils.CONFIG_SCHEMA)
@@ -61,6 +50,31 @@ elif "modloader" not in config:
     fail("Loader has to be given as argument when not defined in config")
 
 finish_log_action()
+
+log_action("Finding artifact file")
+
+# Parse artifact name
+artifact_filename = args.artifact
+
+if args.find_artifact:
+    utils.verify_json_schema(config_filename, config, utils.ARTIFACT_SEARCH_SCHEMA)
+    artifact_filename = config["artifact_directory"] + config["artifact_filename_pattern"].replace("{}", args.artifact)
+
+# Verify artifact exists
+utils.verify_is_file(artifact_filename, "Unable to find artifact file")
+
+finish_log_action()
+
+
+# Read API tokens
+log_action("Reading API tokens")
+
+tokens = utils.verify_schema_and_open("tokens.json", utils.TOKEN_SCHEMA)
+cf_token = tokens["curseforge"]
+modrinth_token = tokens["modrinth"] if "modrinth" in tokens else None
+
+finish_log_action()
+
 
 # Read version from archive
 log_action("Reading version from artifact")
