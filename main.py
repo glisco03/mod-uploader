@@ -8,6 +8,7 @@ import colorama
 import toml
 from termcolor import colored
 
+import cf_version_scraper
 import host_adapters
 import utils
 from utils import fail, log_action, finish_log_action
@@ -19,24 +20,72 @@ colorama.init()
 parser = argparse.ArgumentParser(description="Upload artifacts to various mod hosting sites",
                                  usage="%(prog)s config_file artifact [--modrinth] [--curseforge]")
 
-parser.add_argument("config_file", help="The upload config to use")
-parser.add_argument("artifact", help="The artifact to upload")
+parser.add_argument("config_file", help="The upload config to use", nargs="?")
+parser.add_argument("artifact", help="The artifact to upload", nargs="?")
 
 parser.add_argument("-m", "--modrinth", help="Don't ask, always upload to Modrinth", action="store_true")
 parser.add_argument("-c", "--curseforge", help="Don't ask, always upload to CurseForge", action="store_true")
 parser.add_argument("-l", "--loader", help="Overrides the modloader defined in config, required if none is defined",
                     type=str, choices=["forge", "fabric"])
-parser.add_argument("-f", "--find-artifact", help="Interpret artifact filename as version ID and search using the given pattern in the given directory",
+parser.add_argument("-f", "--find-artifact",
+                    help="Interpret artifact filename as version ID and search using the given pattern in the given directory",
+                    action="store_true")
+parser.add_argument("--scrape-cf-mappings",
+                    help="Scrape CurseForge version mappings from the given HTML and exit",
+                    type=str, metavar="<mod edit page HTML>")
+parser.add_argument("--dump-cf-mappings",
+                    help="Dumps the currently indexed CurseForge version IDs",
                     action="store_true")
 parser.add_argument("--debug", help="Prints the requests being sent to the host sites", action="store_true")
 
 args = parser.parse_args()
-print("\n\u001b[38;5;100mScatter™ Mod Publishing Utility - v0.2-beta\u001b[0m\n")
+print("\n\u001b[38;5;100mScatter™ Mod Publishing Utility - v0.3-beta\u001b[0m\n")
 
 # Verify input
-utils.verify_is_file("tokens.json", "No token config provided")
-utils.verify_is_file(args.config_file, "Invalid config filename")
+if not args.scrape_cf_mappings and not args.config_file and not args.artifact and not args.dump_cf_mappings:
+    parser.print_help()
+    exit()
 
+if args.scrape_cf_mappings:
+    html_name = args.scrape_cf_mappings
+
+    log_action("Reading versions HTML")
+
+    utils.verify_is_file(html_name, "Versions HTML not found")
+    cf_version_scraper.scrape(html_name)
+
+    exit()
+
+utils.verify_is_file("tokens.json", "No token config provided")
+utils.verify_is_file("cf_version_mappings.json", "Missing CF version mappings")
+
+if args.dump_cf_mappings:
+
+    log_action("Loading CurseForge mappings")
+    mappings = json.loads(open("cf_version_mappings.json").read())
+    finish_log_action()
+
+    print(colored("\n-- Begin CF Mappings Dump --\n", "green"))
+    lineIndex = 0
+    line = ""
+    for version in mappings:
+        newContent = version + ": " + str(mappings[version])
+        line = line + newContent + (" " * (30 - len(newContent)))
+        if lineIndex < 3:
+            lineIndex = lineIndex + 1
+        else:
+            print(line)
+            lineIndex = 0
+            line = ""
+
+    if line:
+        print(line)
+
+    print(colored("\n-- End CF Mappings Dump --", "green"))
+    exit()
+
+
+utils.verify_is_file(args.config_file, "Invalid config filename")
 
 # Read upload config
 config_filename = args.config_file
@@ -65,7 +114,6 @@ utils.verify_is_file(artifact_filename, "Unable to find artifact file")
 
 finish_log_action()
 
-
 # Read API tokens
 log_action("Reading API tokens")
 
@@ -74,7 +122,6 @@ cf_token = tokens["curseforge"]
 modrinth_token = tokens["modrinth"] if "modrinth" in tokens else None
 
 finish_log_action()
-
 
 # Read version from archive
 log_action("Reading version from artifact")

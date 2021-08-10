@@ -55,17 +55,17 @@ def upload_curseforge(filename, token, mod_config, metadata_container, debug):
         versions.append("Java 16")
 
     # Get matching minecraft versions from CF
-    cf_minecraft_versions = json.loads(
-        requests.get("https://minecraft.curseforge.com/api/game/versions?token=" + token).text)
-    cf_matching_versions = [element for element in cf_minecraft_versions if
-                            element["name"] in versions]
+    cf_version_mappings = json.loads(open("cf_version_mappings.json").read())
 
     cf_metadata = {}
     cf_metadata["changelog"] = metadata_container["changelog"]
 
     cf_version_ids = []
-    for element in cf_matching_versions:
-        cf_version_ids.append(element["id"])
+    for version in versions:
+        if version not in cf_version_mappings:
+            utils.fail("Missing CF version id mapping for version: " + version)
+
+        cf_version_ids.append(cf_version_mappings[version])
 
     cf_metadata["gameVersions"] = cf_version_ids
 
