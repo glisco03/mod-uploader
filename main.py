@@ -30,6 +30,9 @@ parser.add_argument("-l", "--loader", help="Overrides the modloader defined in c
 parser.add_argument("-f", "--find-artifact",
                     help="Interpret artifact filename as version ID and search using the given pattern in the given directory",
                     action="store_true")
+parser.add_argument("--override-version",
+                    help="Override the version from the artifact",
+                    type=str, metavar="<version ID>")
 parser.add_argument("--scrape-cf-mappings",
                     help="Scrape CurseForge version mappings from the given HTML and exit",
                     type=str, metavar="<mod edit page HTML>")
@@ -39,7 +42,7 @@ parser.add_argument("--dump-cf-mappings",
 parser.add_argument("--debug", help="Prints the requests being sent to the host sites", action="store_true")
 
 args = parser.parse_args()
-print("\n\u001b[38;5;100mScatter™ Mod Publishing Utility - v0.3-beta\u001b[0m\n")
+print("\n\u001b[38;5;100mScatter™ Mod Publishing Utility - v0.3-beta+1\u001b[0m\n")
 
 # Verify input
 if not args.scrape_cf_mappings and not args.config_file and not args.artifact and not args.dump_cf_mappings:
@@ -143,6 +146,9 @@ elif config["modloader"] == "forge":
     version = mod_toml["mods"][0]["version"]
 
 finish_log_action()
+
+if args.override_version:
+    version = args.override_version
 
 # Read user input for this specific version
 print()
