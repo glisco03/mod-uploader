@@ -1,6 +1,6 @@
 import json
 
-import amtSemVer
+from packaging import version
 import requests
 
 import utils
@@ -51,7 +51,7 @@ def upload_curseforge(filename, token, mod_config, metadata_container, debug):
     versions = mod_config["minecraft_versions"].copy()
     versions.append(mod_config["modloader"].capitalize())
 
-    if amtSemVer.SemanticVersion.parse(versions[0]).minor >= 17:
+    if version.parse(versions[0]).minor >= 17:
         versions.append("Java 16")
 
     # Get matching minecraft versions from CF
@@ -61,11 +61,11 @@ def upload_curseforge(filename, token, mod_config, metadata_container, debug):
     cf_metadata["changelog"] = metadata_container["changelog"]
 
     cf_version_ids = []
-    for version in versions:
-        if version not in cf_version_mappings:
-            utils.fail("Missing CF version id mapping for version: " + version)
+    for minecraft_version in versions:
+        if minecraft_version not in cf_version_mappings:
+            utils.fail("Missing CF version id mapping for version: " + minecraft_version)
 
-        cf_version_ids.append(cf_version_mappings[version])
+        cf_version_ids.append(cf_version_mappings[minecraft_version])
 
     cf_metadata["gameVersions"] = cf_version_ids
 
